@@ -1,8 +1,9 @@
 from svg.path.path import Path
 from shapely.geometry import Polygon
 from xml.dom import minidom
-from svg.path import parse_path, Move, Close, Line
-from graphs.converter.types import Polygons
+from svg.path import parse_path, Move, Close, Line, CubicBezier
+
+from graphs.types import Polygons
 
 
 def _path_to_polygon(path_id: str, path: Path) -> Polygon:
@@ -14,7 +15,8 @@ def _path_to_polygon(path_id: str, path: Path) -> Polygon:
     for segment in path:
         match segment:
             case Move(): points.append((segment.start.real, segment.start.imag))
-            case Line(): points.append((segment.end.real, segment.end.imag))
+            case Line() | CubicBezier():
+                points.append((segment.end.real, segment.end.imag))
             case Close(): pass
             case _: raise RuntimeError(f'Path {path_id}: Unexpected segment type: {type(segment)}')
 
@@ -27,10 +29,11 @@ def from_string(svg_as_string: str) -> Polygons:
 
     for path in svg.getElementsByTagName('path'):
         assert path.hasAttribute('id'), 'path does not have required `id` attribute'
-        assert path.hasAttribute('d'), 'path does not have required `d` attribute'
-
         path_id = path.getAttribute('id')
+
+        assert path.hasAttribute('d'), f'path {path_id} does not have required `d` attribute'
         path = parse_path(path.getAttribute('d'))
+
         poly = _path_to_polygon(path_id, path)
         polygons.append(poly)
 
