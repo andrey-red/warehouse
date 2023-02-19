@@ -61,4 +61,4 @@ def main(svg_file_path: str) -> None:
 
 
 if __name__ == '__main__':
-    main('resources/04.svg')
+    main('resources/drawing-01.svg')
